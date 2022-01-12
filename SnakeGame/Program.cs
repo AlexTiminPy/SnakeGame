@@ -56,23 +56,14 @@ namespace SnakeGame
             this.Next = null;
 
         }
-        public SnakeNode GetNext()
+        public SnakeNode GetNext() // try to delete
         {
             return this.Next;
         }
-        public void SetVect(int x, int y)
+        public void SetVect(int x, int y) // try to upgrade
         {
             Vect_X = x;
             Vect_Y = y;
-        }
-        public void AddNext()
-        {
-            if (this.Next == null)
-            {
-                this.Next = new SnakeNode(this.X - this.Vect_X, this.Y - this.Vect_Y);
-                this.Next.SetVect(this.Vect_X, this.Vect_Y);
-            }
-            else this.Next.AddNext();
         }
         public void Update()
         {
@@ -108,8 +99,17 @@ namespace SnakeGame
             return this.Next.GetLenght(i + 1);
         }
 
-        public int X { get; set; }
-        public int Y { get; set; }
+        private int X { get; set; }
+        private int Y { get; set; }
+        private void AddNext()
+        {
+            if (this.Next == null)
+            {
+                this.Next = new SnakeNode(this.X - this.Vect_X, this.Y - this.Vect_Y);
+                this.Next.SetVect(this.Vect_X, this.Vect_Y);
+            }
+            else this.Next.AddNext();
+        }
         private void Damage()
         {
             if (this.Next.Next == null)

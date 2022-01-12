@@ -79,16 +79,16 @@ namespace SnakeGame
             this.X += this.Vect_X;
             this.Y += this.Vect_Y;
 
-            if (this.Next != null && this.Next.CheckCollisionSelf(this.X, this.Y))
-            {
-                this.Damage();
-            }
-
             if (this.X >= Screen.screen_width) this.X -= Screen.screen_width;
             if (this.Y >= Screen.screen_height) this.Y -= Screen.screen_height;
 
             if (this.X < 0) this.X += Screen.screen_width;
             if (this.Y < 0) this.Y += Screen.screen_height;
+
+            if (this.Next != null && this.Next.CheckCollisionSelf(this.X, this.Y))
+            {
+                this.Damage();
+            }
 
             this.Eat();
 

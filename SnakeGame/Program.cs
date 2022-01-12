@@ -56,15 +56,6 @@ namespace SnakeGame
             this.Next = null;
 
         }
-        public SnakeNode GetNext() // try to delete
-        {
-            return this.Next;
-        }
-        public void SetVect(int x, int y) // try to upgrade
-        {
-            Vect_X = x;
-            Vect_Y = y;
-        }
         public void Update()
         {
             this.X += this.Vect_X;
@@ -76,17 +67,18 @@ namespace SnakeGame
             if (this.X < 0) this.X += Screen.screen_width;
             if (this.Y < 0) this.Y += Screen.screen_height;
 
-            if (this.Next != null && this.Next.CheckCollisionSelf(this.X, this.Y))
-            {
-                this.Damage();
-            }
 
-            if (this.Next != null) 
+            if (this.Next != null)
             {
+                this.Next.CheckCollisionSelf(this.X, this.Y);
                 this.Next.Update();
                 this.Next.SetVect(this.Vect_X, this.Vect_Y);
             }
             this.Eat();
+        }
+        public SnakeNode GetNext() // try to delete
+        {
+            return this.Next;
         }
         public CircleShape GetCircleForDraw()
         {
@@ -97,6 +89,11 @@ namespace SnakeGame
         {
             if (this.Next == null) return i;
             return this.Next.GetLenght(i + 1);
+        }
+        public void SetVect(int x, int y) // try to upgrade
+        {
+            Vect_X = x;
+            Vect_Y = y;
         }
 
         private int X { get; set; }
@@ -132,13 +129,16 @@ namespace SnakeGame
                 }
             }
         }
-        private bool CheckCollisionSelf(int x, int y) 
+        private void CheckCollisionSelf(int x, int y) 
         {
             if (this.X == x && this.Y == y)
             {
-                return true;
+                this.Next = null;
             }
-            return false;
+            if (this.Next != null)
+            {
+                this.Next.CheckCollisionSelf(x, y);
+            }
         }
     }
     class Food

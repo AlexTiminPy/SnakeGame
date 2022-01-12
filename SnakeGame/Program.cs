@@ -90,12 +90,12 @@ namespace SnakeGame
                 this.Damage();
             }
 
+            if (this.Next != null) 
+            {
+                this.Next.Update();
+                this.Next.SetVect(this.Vect_X, this.Vect_Y);
+            }
             this.Eat();
-
-            if (this.Next == null) return;
-
-            this.Next.Update();
-            this.Next.SetVect(this.Vect_X, this.Vect_Y);
         }
         public CircleShape GetCircleForDraw()
         {

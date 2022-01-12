@@ -7,14 +7,20 @@ using SFML.Graphics;
 
 namespace SnakeGame
 {
-
     static class Screen
     {
-        public const int screen_width = 1800, screen_height = 900;
-        public static RenderWindow win;
+        public const int ScreenWidth = 1800, ScreenHeight = 900;
+        public static RenderWindow Win;
         public static SFML.System.Clock Clock;
-        public static Random rand = new Random();
-        public static int speed = 30;
+        public static SFML.System.Clock Timer;
+        public static Random Rand = new Random();
+        public static int Speed = 30;
+        public static int MaxTimer = 3000;
+        public static void RestartTimer()
+        {
+            Screen.Timer.Restart();
+            Screen.MaxTimer -= 10;
+        }
     }
     static class Draw
     {
@@ -22,7 +28,7 @@ namespace SnakeGame
         {
             try
             {
-                Screen.win.Draw(snake.GetCircleForDraw());
+                Screen.Win.Draw(snake.GetCircleForDraw());
                 DrawSnake(snake.GetNext());
             }
             catch
@@ -32,9 +38,9 @@ namespace SnakeGame
         }
         public static void DrawEat()
         {
-            foreach(var food in Food.food)
+            foreach(var food in Food.FoodArray)
             {
-                Screen.win.Draw(food.GetCircleForDraw());
+                Screen.Win.Draw(food.GetCircleForDraw());
             }
         }
     }
@@ -43,7 +49,7 @@ namespace SnakeGame
         private int Vect_X = 0;
         private int Vect_Y = 0;
         private SnakeNode Next;
-        private static CircleShape circle = new CircleShape
+        private static CircleShape Circle = new CircleShape
         {
             FillColor = Color.White,
             Radius = 15,
@@ -53,27 +59,26 @@ namespace SnakeGame
         {
             this.X = x;
             this.Y = y;
-            this.Next = null;
-
         }
         public void Update()
         {
             this.X += this.Vect_X;
             this.Y += this.Vect_Y;
 
-            if (this.X >= Screen.screen_width) this.X -= Screen.screen_width;
-            if (this.Y >= Screen.screen_height) this.Y -= Screen.screen_height;
+            if (this.X >= Screen.ScreenWidth) this.X -= Screen.ScreenWidth;
+            if (this.Y >= Screen.ScreenHeight) this.Y -= Screen.ScreenHeight;
 
-            if (this.X < 0) this.X += Screen.screen_width;
-            if (this.Y < 0) this.Y += Screen.screen_height;
+            if (this.X < 0) this.X += Screen.ScreenWidth;
+            if (this.Y < 0) this.Y += Screen.ScreenHeight;
 
+            this.CheckCollisionSelf(this.X, this.Y);
 
             if (this.Next != null)
             {
-                this.Next.CheckCollisionSelf(this.X, this.Y);
                 this.Next.Update();
                 this.Next.SetVect(this.Vect_X, this.Vect_Y);
             }
+
             this.Eat();
         }
         public SnakeNode GetNext() // try to delete
@@ -82,8 +87,8 @@ namespace SnakeGame
         }
         public CircleShape GetCircleForDraw()
         {
-            circle.Position = new SFML.System.Vector2f(this.X, this.Y);
-            return circle;
+            Circle.Position = new SFML.System.Vector2f(this.X, this.Y);
+            return Circle;
         }
         public int GetLenght(int i)
         {
@@ -94,6 +99,10 @@ namespace SnakeGame
         {
             Vect_X = x;
             Vect_Y = y;
+        }
+        public void Died()
+        {
+            this.Next = null;
         }
 
         private int X { get; set; }
@@ -107,49 +116,40 @@ namespace SnakeGame
             }
             else this.Next.AddNext();
         }
-        private void Damage()
-        {
-            if (this.Next.Next == null)
-            {
-                this.Next = null;
-            }
-        }
         private void Eat()
         {
-            foreach (var food in Food.food)
+            foreach (var food in Food.FoodArray)
             {
                 var a = Math.Abs((this.X + 15) - (food.X + 2.5));
                 var b = Math.Abs((this.Y + 15) - (food.Y + 2.5));
                 if (Math.Sqrt(a * a + b * b) <= 17.5)
                 {
                     this.AddNext();
-                    food.Spawn(Screen.rand);
-                    Screen.speed -= 1;
+                    food.Spawn(Screen.Rand);
+                    Screen.RestartTimer();
                     return;
                 }
             }
         }
         private void CheckCollisionSelf(int x, int y) 
         {
-            if (this.X == x && this.Y == y)
+            if (this.Next == null) return;
+            if (x == this.Next.X && y == this.Next.Y)
             {
                 this.Next = null;
+                return;
             }
-            if (this.Next != null)
-            {
-                this.Next.CheckCollisionSelf(x, y);
-            }
+            this.Next.CheckCollisionSelf(x, y);
         }
     }
     class Food
     {
-        private static CircleShape circle = new CircleShape
+        private static CircleShape Circle = new CircleShape
         {
             FillColor = Color.Red,
             Radius = 5,
         };
-
-        static public Food[] food = new Food[15];
+        public static Food[] FoodArray = new Food[15];
         public int X { get; private set; }
         public int Y { get; private set; }
         public void Spawn(Random rand)
@@ -161,8 +161,8 @@ namespace SnakeGame
         }
         public CircleShape GetCircleForDraw()
         {
-            circle.Position = new SFML.System.Vector2f(this.X, this.Y);
-            return circle;
+            Circle.Position = new SFML.System.Vector2f(this.X, this.Y);
+            return Circle;
         }
     }
     class Program
@@ -171,36 +171,33 @@ namespace SnakeGame
         {
             SnakeNode sn1 = new SnakeNode(30, 30);
 
-            //sn1.AddNext();
-            //sn1.AddNext();
-            //sn1.AddNext();
-
-            Screen.win = new RenderWindow(new SFML.Window.VideoMode(Screen.screen_width, Screen.screen_height), "snake game");
-            Screen.win.SetVerticalSyncEnabled(true);
-            Screen.win.Closed += WinClosed;
+            Screen.Win = new RenderWindow(new SFML.Window.VideoMode(Screen.ScreenWidth, Screen.ScreenHeight), "snake game");
+            Screen.Win.SetVerticalSyncEnabled(true);
+            Screen.Win.Closed += WinClosed;
             Screen.Clock = new SFML.System.Clock();
+            Screen.Timer = new SFML.System.Clock();
 
             RectangleShape rect = new RectangleShape
             {
                 FillColor = new Color(70, 70, 70),
             };
 
-            for (int i = 0; i < Food.food.Length; i++)
+            for (int i = 0; i < Food.FoodArray.Length; i++)
             {
-                Food.food[i] = new Food();
-                Food.food[i].Spawn(Screen.rand);
+                Food.FoodArray[i] = new Food();
+                Food.FoodArray[i].Spawn(Screen.Rand);
             }
 
             int Sc = 0;
 
             // main loop
-            while (Screen.win.IsOpen)
+            while (Screen.Win.IsOpen)
             {
                 Sc += 1;
                 if (Sc == 6) Sc = 0;
                 Screen.Clock.Restart();
-                Screen.win.DispatchEvents();
-                Screen.win.Clear(Color.Black);
+                Screen.Win.DispatchEvents();
+                Screen.Win.Clear(Color.Black);
 
                 if (SFML.Window.Keyboard.IsKeyPressed(SFML.Window.Keyboard.Key.Up)) { sn1.SetVect(0, -30); }
                 if (SFML.Window.Keyboard.IsKeyPressed(SFML.Window.Keyboard.Key.Down)) { sn1.SetVect(0, 30); }
@@ -215,23 +212,29 @@ namespace SnakeGame
                 for (int i = 0; i < 1801; i += 30)
                 {
                     rect.Position = new SFML.System.Vector2f(i, 0);
-                    Screen.win.Draw(rect);
+                    Screen.Win.Draw(rect);
                 }
                 rect.Size = new SFML.System.Vector2f(1800, 1);
                 for (int i = 0; i < 901; i += 30)
                 {
                     rect.Position = new SFML.System.Vector2f(0, i);
-                    Screen.win.Draw(rect);
+                    Screen.Win.Draw(rect);
                 }
 
-                Screen.win.Display();
-                Screen.win.SetTitle(Convert.ToString(1000 / Math.Max(1, Screen.Clock.ElapsedTime.AsMilliseconds())) + " - " + 
+                if (Screen.Timer.ElapsedTime.AsMilliseconds() > Screen.MaxTimer)
+                {
+                    sn1.Died();
+                }
+
+                Screen.Win.Display();
+                Screen.Win.SetTitle(Convert.ToString(1000 / Math.Max(1, Screen.Clock.ElapsedTime.AsMilliseconds())) + " - " + 
+                    Convert.ToString(Screen.MaxTimer - Screen.Timer.ElapsedTime.AsMilliseconds()) + " - " +
                     Convert.ToString(sn1.GetLenght(1)));
             }
         }
         private static void WinClosed(object sender, EventArgs e)
         {
-            Screen.win.Close();
+            Screen.Win.Close();
         }
     }
 }
